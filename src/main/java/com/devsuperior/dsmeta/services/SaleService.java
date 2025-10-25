@@ -1,8 +1,13 @@
 package com.devsuperior.dsmeta.services;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.devsuperior.dsmeta.dto.SaleMinDTO;
@@ -20,4 +25,17 @@ public class SaleService {
 		Sale entity = result.get();
 		return new SaleMinDTO(entity);
 	}
+
+    public Page<SaleMinDTO> findAll(String name, String minDate, String maxDate, Pageable pageable) {
+
+        LocalDate today = LocalDate.ofInstant(Instant.now(), ZoneId.systemDefault());
+        LocalDate max = (maxDate == null || maxDate.isBlank()) ? today
+                : LocalDate.parse(maxDate);
+        LocalDate min = (minDate == null || minDate.isBlank())
+                ? max.minusYears(1L)
+                : LocalDate.parse(minDate);
+
+        Page<Sale> result = repository.searchAll(name, min, max, pageable);
+        return result.map(x -> new SaleMinDTO(x));
+    }
 }
